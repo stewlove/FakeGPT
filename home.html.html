@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Chat Window</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+    <style>
+        .chat-container {
+            height: 80vh;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .url-input {
+            width: 100%;
+        }
+
+        .chat-image {
+            max-width: 100%;
+            max-height: 200px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h2 class="text-center mb-4">Basic Chat Window</h2>
+            <div class="chat-container mb-3">
+                <!-- Chat messages and images will be added here -->
+            </div>
+            <div class="input-group">
+                <input type="text" class="form-control url-input" placeholder="Enter URL or image URL here...">
+                <button class="btn btn-primary" type="button">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    async function isImageUrl(url) {
+        try {
+            const response = await fetch(url, { method: 'HEAD' });
+            const contentType = response.headers.get('Content-Type');
+            return contentType && contentType.startsWith('image/');
+        } catch (error) {
+            console.error('Error checking URL:', error);
+            return false;
+        }
+    }
+
+    async function postImageUrl(url) {
+        try {
+            const response = await fetch('https://iscat.topsecondhost.com/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ imageLink: url })
+            });
+            return response.ok ? await response.text() : null;
+        } catch (error) {
+            console.error('Error posting URL:', error);
+            return null;
+        }
+    }
+
+    async function sendMessage() {
+        const input = document.querySelector('.url-input');
+        const chatContainer = document.querySelector('.chat-container');
+
+        if (await isImageUrl(input.value)) {
+            const img = document.createElement('img');
+            img.src = input.value;
+            img.classList.add('chat-image');
+            chatContainer.appendChild(img);
+
+            const apiResult = await postImageUrl(input.value);
+            if (apiResult) {
+                const apiMessage = document.createElement('p');
+                apiMessage.textContent = `API result: ${apiResult}`;
+                chatContainer.appendChild(apiMessage);
+            } else {
+                console.warn('Failed to post image URL');
+            }
+        } else {
+            const message = document.createElement('p');
+            message.textContent = input.value;
+            chatContainer.appendChild(message);
+        }
+        input.value = '';
+    }
+
+    document.querySelector('button').addEventListener('click', sendMessage);
+</script>
+</body>
+</html>
